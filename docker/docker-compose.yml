@@ -1,0 +1,12 @@
+services:
+  lab:
+    build: .
+    image: lowlevel-env
+    volumes:
+      - .:/lab  # Montuje bieżący folder hosta do /lab w kontenerze
+    cap_add:
+      - SYS_PTRACE # Wymagane, żeby GDB mógł debugować pamięć
+    security_opt:
+      - seccomp:unconfined
+    stdin_open: true # Utrzymuje kontener włączony
+    tty: true

@@ -53,3 +53,56 @@ dkms.conf
 
 # debug information files
 *.dwo
+
+# --- C/C++ ---
+# Pliki obiektowe (pośrednie)
+*.o
+*.obj
+
+# Biblioteki dynamiczne i statyczne
+*.so
+*.dylib
+*.dll
+*.a
+*.lib
+
+# Domyślna nazwa pliku wykonywalnego GCC
+a.out
+
+
+# --- WebAssembly ---
+# Ignorujemy binarne pliki wasm (są generowane z .wat lub .c)
+*.wasm
+# Ale zostawiamy .wat (kod źródłowy tekstowy)
+!*.wat
+
+# --- Debugowanie i Crashe (Ważne przy Buffer Overflow!) ---
+# Zrzuty pamięci po segfault
+core
+core.*
+*.core
+
+# Logi GDB
+gdb.txt
+gdb.log
+
+# --- Inżynieria Wsteczna ---
+# Projekty Ghidra (zawierają bazę danych analizy)
+*.gpr
+*.rep/
+
+# --- Python (do skryptów CTF/Exploitów) ---
+__pycache__/
+*.pyc
+venv/
+.env
+
+# --- Edytory i IDE ---
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# --- Systemowe ---
+.DS_Store
+Thumbs.db
