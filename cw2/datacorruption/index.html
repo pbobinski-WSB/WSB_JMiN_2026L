@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <title>Wasm Hack</title>
+</head>
+<body>
+    <h1>Wasm Memory Hack</h1>
+    <button onclick="normalLogin()">Zwykłe logowanie (5 znaków)</button>
+    <button onclick="hackLogin()">ATAK! (15 znaków)</button>
+    <h2 id="status">Status: </h2>
+
+    <script>
+        let wasmExports = null;
+
+        WebAssembly.instantiateStreaming(fetch('auth.wasm')).then(result => {
+            wasmExports = result.instance.exports;
+            wasmExports.init(); // Ustaw is_admin na 0
+            updateStatus();
+        });
+
+        function updateStatus() {
+            const isAdmin = wasmExports.checkAdmin();
+            const statusEl = document.getElementById('status');
+            if (isAdmin === 0) {
+                statusEl.innerText = "Status: Zwykły użytkownik (Odmowa dostępu)";
+                statusEl.style.color = "red";
+            } else {
+                statusEl.innerText = "Status: ADMINISTRATOR (HACKED!)";
+                statusEl.style.color = "green";
+            }
+        }
+
+        function normalLogin() {
+            wasmExports.init(); // reset
+            // Podajemy hasło o długości 5 znaków (każdy znak to kod 42)
+            wasmExports.login(5, 42); 
+            updateStatus();
+        }
+
+        function hackLogin() {
+            wasmExports.init(); // reset
+            // ATAK: Wysyłamy hasło o długości 15 znaków (kod 99).
+            // Zapisze bajty pod adresy 0, 1, 2... aż do 14!
+            // Zmiażdży adres 10 (ADMIN_PTR).
+            wasmExports.login(15, 99); 
+            updateStatus();
+        }
+    </script>
+</body>
+</html>
