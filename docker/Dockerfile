@@ -1,9 +1,8 @@
 FROM ubuntu:22.04
 
-# Unikamy pytań o strefę czasową podczas instalacji
 ENV DEBIAN_FRONTEND=noninteractive
 
-# Instalacja narzędzi podstawowych
+# 1. Instalujemy podstawowe narzędzia i WABT
 RUN apt-get update && apt-get install -y \
     build-essential \
     gdb \
@@ -16,16 +15,17 @@ RUN apt-get update && apt-get install -y \
     curl \
     file \
     bsdmainutils \
+    wabt \
     && rm -rf /var/lib/apt/lists/*
 
-# Instalacja Pwndbg (nakładka na GDB - standard w CTF)
-# Ułatwia czytanie rejestrów i stosu
+# 2. Instalujemy NOWEGO Node.js (v20) ze źródła NodeSource
+RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - && \
+    apt-get install -y nodejs
+
+# 3. Instalacja Pwndbg (bez zmian)
 WORKDIR /root
 RUN git clone https://github.com/pwndbg/pwndbg && \
-    cd pwndbg && \
-    ./setup.sh
+    cd pwndbg && ./setup.sh
 
-# Ustawienie katalogu roboczego
 WORKDIR /lab
-
 CMD ["/bin/bash"]

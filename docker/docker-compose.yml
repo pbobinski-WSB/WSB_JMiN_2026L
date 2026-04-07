@@ -4,6 +4,8 @@ services:
     image: lowlevel-env
     volumes:
       - .:/lab  # Montuje bieżący folder hosta do /lab w kontenerze
+    ports:
+      - "8080:8080" 
     cap_add:
       - SYS_PTRACE # Wymagane, żeby GDB mógł debugować pamięć
     security_opt:

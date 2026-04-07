@@ -21,11 +21,39 @@ docker run --rm -it -v ${PWD}:/lab --cap-add=SYS_PTRACE --security-opt seccomp=u
 ```
 
 ```ps
-function lab { docker run --rm -it -v ${PWD}:/lab --cap-add=SYS_PTRACE --security-opt seccomp=unconfined lowlevel-env bash }
+function lab { docker run --rm -it -v ${PWD}:/lab -p 8080:8080 --cap-add=SYS_PTRACE --security-opt seccomp=unconfined lowlevel-env bash }
 ```
 
 ## 2. Kompilacja (GCC)
 Zamiana kodu C na plik wykonywalny (ELF).
 
 *   **Zwykła kompilacja:**
+
     `gcc main.c -o main`
+
+## 3. WASM
+
+Inicjalizacja pustego projektu Node (tworzy package.json)
+
+`npm init -y`
+
+Instalacja AssemblyScript jako narzędzia deweloperskiego
+
+`npm install --save-dev assemblyscript`
+
+Kompilacja
+
+`npx asc math.ts -o math.wasm -O3`
+
+Test
+
+`python3 -m http.server 8080`
+
+`wasm2wat math.wasm -o math.wat`
+
+`wat2wasm math.wat -o math.wasm`
+
+Filtracja
+
+`npx asc filter.ts -o filter.wasm -O3 --initialMemory 1`
+

@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <title>Wasm Memory Matrix</title>
+</head>
+<body>
+    <h1>Modyfikacja pamięci RAM (Wasm)</h1>
+    <canvas id="myCanvas" width="200" height="200" style="border:1px solid black;"></canvas>
+    
+    <script>
+        const canvas = document.getElementById('myCanvas');
+        const ctx = canvas.getContext('2d');
+        const width = canvas.width;
+        const height = canvas.height;
+
+        // KROK A: JavaScript rysuje kolorowy prostokąt (np. czerwony po lewej, niebieski po prawej)
+        const gradient = ctx.createLinearGradient(0, 0, width, 0);
+        gradient.addColorStop(0, "red");
+        gradient.addColorStop(1, "blue");
+        ctx.fillStyle = gradient;
+        ctx.fillRect(0, 0, width, height);
+
+        // KROK B: Ładujemy nasz silnik WebAssembly
+        WebAssembly.instantiateStreaming(fetch('filter.wasm')).then(result => {
+            const exports = result.instance.exports;
+            const memory = exports.memory; // <--- To jest wirtualny RAM naszego modułu Wasm!
+            // memory.grow(3); 
+            // Czekamy 2 sekundy dla efektu wow na zajęciach
+            setTimeout(() => {
+                // 1. Zgrywamy piksele z płótna (Z punktu widzenia komputera to po prostu wielka jednowymiarowa tablica[R,G,B,A, R,G,B,A...])
+                const imageData = ctx.getImageData(0, 0, width, height);
+                const pixelsJS = imageData.data;
+
+                // 2. Kopiujemy nasze piksele do pamięci (RAMu) modułu WebAssembly (Zaczynając od adresu 0)
+                const wasmRAM = new Uint8Array(memory.buffer);
+                console.log("Rozmiar RAMu Wasm:", memory.buffer.byteLength);
+                wasmRAM.set(pixelsJS, 0);
+
+                // 3. Wasm robi swoje (bardzo szybko). Mówimy mu tylko jak duży jest obrazek.
+                // Moduł wpadnie do pamięci, zmodyfikuje bajty pod adresem 0, 1, 2...
+                exports.invertColors(width, height);
+
+                // 4. Czytamy zmodyfikowaną pamięć Wasm i odkładamy z powrotem do JavaScriptu
+                pixelsJS.set(wasmRAM.subarray(0, width * height * 4));
+
+                // 5. Renderujemy nowy obraz!
+                ctx.putImageData(imageData, 0, 0);
+                
+                console.log("Pamięć została przetworzona przez Wasm!");
+            }, 2000);
+        });
+    </script>
+</body>
+</html>

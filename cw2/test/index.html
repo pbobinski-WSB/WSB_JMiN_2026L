@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <title>Wasm Hello World</title>
+</head>
+<body>
+    <h1>Konsola F12 powie Ci prawdę!</h1>
+    
+    <script>
+        // Pobieramy i kompilujemy w locie plik .wasm
+        WebAssembly.instantiateStreaming(fetch('math.wasm'))
+            .then(result => {
+                // Wyciągamy wyeksportowane funkcje z modułu
+                const exports = result.instance.exports;
+                
+                // Wywołujemy naszą funkcję napisaną w AssemblyScript
+                const suma = exports.add(40, 2);
+                
+                console.log("Magia WebAssembly!");
+                console.log("Wynik funkcji add(40, 2):", suma);
+            })
+            .catch(err => console.error("Błąd Wasm:", err));
+    </script>
+</body>
+</html>
