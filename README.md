@@ -57,3 +57,6 @@ Filtracja
 
 `npx asc filter.ts -o filter.wasm -O3 --initialMemory 1`
 
+Hackowanie
+
+`npx asc auth.ts -o auth.wasm -O3 --initialMemory 1`

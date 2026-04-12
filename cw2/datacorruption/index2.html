@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <title>Wasm Memory Hack</title>
+    <style>
+        body { font-family: monospace; text-align: center; margin-top: 50px; }
+        input { padding: 10px; font-size: 16px; width: 300px;}
+        button { padding: 10px 20px; font-size: 16px; cursor: pointer;}
+        #status { font-size: 24px; font-weight: bold; margin-top: 20px; }
+    </style>
+</head>
+<body>
+    <h1>Panel Logowania Wasm</h1>
+    <p>Nasz system przydziela 10 bajtów pamięci na hasło.</p>
+    
+    <input type="text" id="passwordInput" placeholder="Wpisz hasło..." />
+    <button onclick="attemptLogin()">Zaloguj</button>
+    
+    <div id="status">Wprowadź dane.</div>
+
+    <script>
+        let wasmExports = null;
+        let wasmMemoryView = null;
+
+        WebAssembly.instantiateStreaming(fetch('auth2.wasm')).then(result => {
+            wasmExports = result.instance.exports;
+            wasmMemoryView = new Uint8Array(wasmExports.memory.buffer);
+            wasmExports.init();
+        });
+
+        function attemptLogin() {
+            const pass = document.getElementById('passwordInput').value;
+            
+            // Zabezpieczamy na wypadek, gdyby JS próbował wrzucić za dużo do skrzynki (poza temat)
+            if (pass.length > 50) return alert("Za długi tekst na wejściu!");
+
+            wasmExports.init(); // Resetujemy flagę admina do 0
+
+            // 1. JS wrzuca hasło usera do "Skrzynki Podawczej" (Adres 100)
+            for (let i = 0; i < pass.length; i++) {
+                // charCodeAt zamienia literę na liczbę (np. 'A' -> 65)
+                wasmMemoryView[100 + i] = pass.charCodeAt(i); 
+            }
+
+            // 2. Mówimy Wasmowi: "Masz hasło, jego długość to X. Skopiuj je do siebie."
+            wasmExports.login(pass.length);
+
+            // 3. Sprawdzamy, czy aplikacja została zhakowana
+            checkIfHacked();
+        }
+
+        function checkIfHacked() {
+            const isAdmin = wasmExports.checkAdmin();
+            const statusEl = document.getElementById('status');
+            
+            if (isAdmin === 0) {
+                statusEl.innerText = "Status: Zwykły Użytkownik";
+                statusEl.style.color = "red";
+            } else {
+                statusEl.innerText = `Status: ADMINISTRATOR (HACKED! Flaga = ${isAdmin})`;
+                statusEl.style.color = "green";
+            }
+        }
+    </script>
+</body>
+</html>
